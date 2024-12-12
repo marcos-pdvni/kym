@@ -29,3 +29,17 @@ export const signupSchema = z
     path: ["confirmPassword"],
     message: "Passwords must match.",
   });
+
+export const newWalletSchema = z.object({
+  title: z.string().min(5),
+  value: z.preprocess((v) => {
+    if (typeof v === "string") {
+      const trimmed = v.trim();
+      if (!isNaN(Number(trimmed))) {
+        return Number(trimmed);
+      }
+    }
+
+    return v;
+  }, z.number().min(0, "Must be a positive number").optional()),
+});

@@ -2,6 +2,7 @@ import { Outlet, useLoaderData } from "@remix-run/react";
 import { LoaderFunctionArgs, redirect } from "@remix-run/node";
 import { getCurrentSession } from "~/lib/session.server";
 import { db } from "~/db.server";
+import { Toaster } from "~/components/ui/toaster";
 
 import AppNavbar from "~/components/custom/app-navbar";
 
@@ -37,6 +38,7 @@ export default function AppLayout() {
     <div className="w-full min-h-screen">
       <AppNavbar user={loaderData?.user} />
       <Outlet />
+      <Toaster />
     </div>
   );
 }
