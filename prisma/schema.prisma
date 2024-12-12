@@ -1,0 +1,169 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserType {
+  DEFAULT
+  PLUS
+  ADMIN
+}
+
+enum RecurringType {
+  ONCE
+  WEEKLY
+  MONTHLY
+  YEARLY
+}
+
+enum CategoryType {
+  INCOME
+  EXPENSE
+  OTHERS
+}
+
+enum IncomeBelonging {
+  WALLET
+  BUDGET
+}
+
+model User {
+  id       String   @id @default(cuid())
+  name     String
+  email    String   @unique
+  password String
+  type     UserType @default(DEFAULT)
+  isActive Boolean  @default(true)
+  wallet   Wallet?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  Notification Notification[]
+}
+
+model Wallet {
+  id          String    @id @default(cuid())
+  userId      String    @unique
+  title       String
+  description String?
+  balance     Float     @default(0)
+  isActive    Boolean   @default(true)
+  budgets     Budget[]
+  incomes     Income[]
+  expenses    Expense[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  TransactionHistory TransactionHistory[]
+}
+
+model Budget {
+  id            String    @id @default(cuid())
+  walletId      String
+  title         String
+  description   String?
+  balanceNow    Float     @default(0)
+  balanceWanted Float     @default(0)
+  monthlyTake   Float?
+  endDate       DateTime?
+  incomes       Income[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  wallet Wallet @relation(fields: [walletId], references: [id], onDelete: Cascade)
+
+  TransactionHistory TransactionHistory[]
+}
+
+model Category {
+  id          Int          @id @default(autoincrement())
+  name        String
+  description String?
+  type        CategoryType @default(OTHERS)
+  incomes     Income[]
+  expenses    Expense[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  TransactionHistory TransactionHistory[]
+}
+
+model Income {
+  id          String          @id @default(cuid())
+  title       String
+  description String?
+  value       Float
+  isRecurring RecurringType   @default(ONCE)
+  belongsTo   IncomeBelonging @default(WALLET)
+  categoryId  Int
+  walletId    String?
+  budgetId    String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  wallet   Wallet?  @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  budget   Budget?  @relation(fields: [budgetId], references: [id], onDelete: Cascade)
+}
+
+model Expense {
+  id          String        @id @default(cuid())
+  title       String
+  description String?
+  value       Float
+  isRecurring RecurringType @default(ONCE)
+  expiresDate DateTime?
+  isPaid      Boolean       @default(false)
+  isExpired   Boolean       @default(false)
+  categoryId  Int
+  walletId    String
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  wallet   Wallet   @relation(fields: [walletId], references: [id], onDelete: Cascade)
+}
+
+model TransactionHistory {
+  id          String  @id @default(cuid())
+  walletId    String?
+  budgetId    String?
+  type        String // INCOME or EXPENSE
+  amount      Float
+  description String?
+  categoryId  Int
+
+  createdAt DateTime @default(now())
+
+  wallet   Wallet?  @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  budget   Budget?  @relation(fields: [budgetId], references: [id], onDelete: Cascade)
+  category Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String // OVERDUE or EXPIRING
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
