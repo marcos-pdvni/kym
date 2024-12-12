@@ -1,6 +1,7 @@
 import { Link, Form } from "@remix-run/react";
 import { Button } from "../ui/button";
 import { LogOutIcon } from "lucide-react";
+import { ThemeToggle } from "../theme-toggle";
 
 export default function AppNavbar({ user }: any) {
   return (
@@ -12,6 +13,7 @@ export default function AppNavbar({ user }: any) {
           </Link>
         </div>
         <div className="flex-1 flex items-center justify-end gap-2">
+          <ThemeToggle />
           <Form method="post" action="/logout">
             <Button
               type="submit"

@@ -1,4 +1,5 @@
 import { createCookieSessionStorage, redirect } from "@remix-run/node";
+import { createThemeSessionResolver } from "remix-themes";
 
 const sessionSecret = process.env.SESSION_SECRET;
 
@@ -27,3 +28,19 @@ export async function createSession(userId: string, redirectTo: string) {
 export async function getCurrentSession(request: Request) {
   return storage.getSession(request.headers.get("cookie"));
 }
+
+const themeSessionStorage = createCookieSessionStorage({
+  cookie: {
+    name: "theme",
+    path: "/",
+    httpOnly: true,
+    sameSite: "lax",
+    secrets: ["s3cr3t"],
+    ...(process.env.NODE_ENV === "production"
+      ? { domain: "your-production-domain.com", secure: true }
+      : {}),
+  },
+});
+
+export const themeSessionResolver =
+  createThemeSessionResolver(themeSessionStorage);
